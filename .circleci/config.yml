@@ -1,0 +1,35 @@
+version: 2
+jobs:
+  build:
+    machine: true
+    steps:
+      - checkout
+      - run:
+          name: Start MongoDB Database
+          command: |
+            docker pull versioneye/mongodb:3.4.6
+            docker run --name mongodb -d versioneye/mongodb:3.4.6
+      - run:
+          name: Start elasticsearch
+          command: |
+            docker pull reiz/elasticsearch:0.9.1-1
+            docker run --name elasticsearch -d reiz/elasticsearch:0.9.1-1
+      - run:
+          name: Start memcached
+          command: |
+            docker pull versioneye/memcached:1.4.33-1ubuntu2
+            docker run --name memcached     -d versioneye/memcached:1.4.33-1ubuntu2
+      - run:
+          name: Start rabbitmq
+          command: |
+            docker pull versioneye/rabbitmq:3.6.10-1
+            docker run --name rabbitmq      -d versioneye/rabbitmq:3.6.10-1
+      - run:
+          name: Copy mongoID CI config
+          command: |
+            cp config/mongoid.yml.ci config/mongoid.yml
+      - run:
+          name: Run tests
+          command: |
+            docker build -t versioneye/ruby-base:2.3.0 .
+            docker run --env RAILS_ENV=test --env GITHUB_CLIENT_ID=$GITHUB_CLIENT_ID --env GITHUB_CLIENT_SECRET=$GITHUB_CLIENT_SECRET --env STRIPE_PUBLIC_KEY=$STRIPE_PUBLIC_KEY --env STRIPE_SECRET_KEY=$STRIPE_SECRET_KEY --env BITBUCKET_PASSWORD=$BITBUCKET_PASSWORD --env BITBUCKET_USERNAME=$BITBUCKET_USERNAME --env BITBUCKET_TOKEN=$BITBUCKET_TOKEN --env BITBUCKET_SECRET=$BITBUCKET_SECRET --env BITBUCKET_USER_TOKEN=$BITBUCKET_USER_TOKEN --env BITBUCKET_USER_SECRET=$BITBUCKET_USER_SECRET --env AWS_S3_ACCESS_KEY_ID=$AWS_S3_ACCESS_KEY_ID --env AWS_S3_SECRET_ACCESS_KEY=$AWS_S3_SECRET_ACCESS_KEY --env AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID --env AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY --link mongodb:db --link elasticsearch:es --link memcached:mc --link rabbitmq:rm -v $CIRCLE_TEST_REPORTS:$CIRCLE_TEST_REPORTS versioneye/ruby-base:2.3.0 rspec -r rspec_junit_formatter --format RspecJunitFormatter -o $CIRCLE_TEST_REPORTS/rspec/junit.xml
