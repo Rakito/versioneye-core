@@ -247,7 +247,8 @@ class User < Versioneye::Model
   def self.authenticate(email, submitted_password)
     user = User.find_by_email( email )
     user = User.find_by_username( email ) if user.nil?
-    return nil  if user.nil? || user.deleted_user
+   # return nil if user.nil? || user.deleted_user
+    return nil if email.nil? || submitted_password.nil?
     return user if user.has_password?(submitted_password)
     return nil
   end

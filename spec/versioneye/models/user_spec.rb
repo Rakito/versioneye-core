@@ -546,6 +546,15 @@ describe User do
       user.should_not be_nil
       user.id.eql?(github_user.id).should be_truthy
     end
+
+    it "doesn't authenticate if username is empty" do
+      User.authenticate("","somePassword").should be_nil
+    end
+
+
+    it "doesn't authenticate if password is empty" do
+      User.authenticate("hans@tanz.de","").should be_nil
+    end
   end
 
   describe "authenticate_with_salt" do
